@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="inter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#inter)"/>
+  <rect x="0" y="0" width="800" height="55" fill="#0f0c29"/>
+  <rect x="50" y="12" width="700" height="3" rx="2" fill="#333"/>
+  <circle cx="110" cy="9" r="7" fill="#f0f0f0" opacity="0.12"/>
+  <circle cx="250" cy="9" r="7" fill="#f0f0f0" opacity="0.12"/>
+  <circle cx="390" cy="9" r="7" fill="#f0f0f0" opacity="0.12"/>
+  <circle cx="530" cy="9" r="7" fill="#f0f0f0" opacity="0.12"/>
+  <circle cx="670" cy="9" r="7" fill="#f0f0f0" opacity="0.12"/>
+  <rect x="80" y="80" width="640" height="420" rx="10" fill="#132013"/>
+  <rect x="80" y="80" width="640" height="420" rx="10" fill="none" stroke="#D4382B" stroke-width="3" opacity="0.4"/>
+  <line x1="400" y1="80" x2="400" y2="500" stroke="white" stroke-width="2" stroke-dasharray="6,6" opacity="0.35"/>
+  <rect x="80" y="80" width="213" height="140" rx="5" fill="none" stroke="white" stroke-width="1" opacity="0.25"/>
+  <rect x="507" y="80" width="213" height="140" rx="5" fill="none" stroke="white" stroke-width="1" opacity="0.25"/>
+  <line x1="80" y1="288" x2="720" y2="288" stroke="white" stroke-width="2" opacity="0.25"/>
+  <rect x="30" y="55" width="50" height="550" fill="#0f0c29" opacity="0.4"/>
+  <rect x="720" y="55" width="50" height="550" fill="#0f0c29" opacity="0.4"/>
+  <rect x="0" y="520" width="800" height="80" fill="#0f0c29" opacity="0.5"/>
+  <line x1="0" y1="520" x2="800" y2="520" stroke="#222" stroke-width="1"/>
+  <rect x="330" y="540" width="140" height="28" rx="4" fill="white" opacity="0.06"/>
+  <text x="400" y="558" text-anchor="middle" fill="white" font-size="12" font-family="Arial Black" opacity="0.35">PADEL PLATZ INTERIOR</text>
+  <line x1="200" y1="550" x2="200" y2="590" stroke="white" stroke-width="0.5" opacity="0.03"/>
+  <line x1="400" y1="545" x2="400" y2="590" stroke="white" stroke-width="0.5" opacity="0.03"/>
+  <line x1="600" y1="550" x2="600" y2="590" stroke="white" stroke-width="0.5" opacity="0.03"/>
+  <circle cx="150" cy="480" r="3" fill="#D4382B" opacity="0.15"/>
+  <circle cx="650" cy="480" r="3" fill="#D4382B" opacity="0.15"/>
+</svg>

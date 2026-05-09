@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Rezervišite padel termin u Padel Platz Kraljevo. Interaktivni kalendar sa zauzetim terminima.">
+    <meta property="og:title" content="Rezervacija - Padel Platz Kraljevo">
+    <title>Rezervacija - Padel Platz Kraljevo</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+    <style>
+        .reservation-page { padding: 80px 0 40px; background: var(--light); }
+        .reservation-page .st { margin-bottom: 12px; }
+        .reservation-page .ss { margin-bottom: 40px; }
+
+        .res-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: start;
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        @media(max-width: 900px) { .res-layout { grid-template-columns: 1fr; } }
+
+        /* Calendar Card */
+        .cal-card {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            padding: 28px;
+            border: 2px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        .cal-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        /* Calendar Header */
+        .cal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .cal-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--surface);
+            letter-spacing: -0.3px;
+        }
+        .cal-nav-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cal-nav-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            color: var(--primary);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+        }
+        .cal-nav-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+        .cal-month-label {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--surface);
+            min-width: 130px;
+            text-align: center;
+        }
+
+        /* Weekday Header */
+        .cal-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .cal-wd {
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 6px 0;
+        }
+
+        /* Calendar Grid */
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            color: var(--surface);
+            background: transparent;
+        }
+        .cal-day:hover:not(.cd-empty):not(.cd-booked):not(.cd-today) {
+            background: rgba(212, 56, 67, 0.08);
+            transform: scale(1.08);
+        }
+        .cal-day.cd-today {
+            background: var(--accent);
+            color: var(--surface);
+            font-weight: 800;
+            box-shadow: 0 3px 12px rgba(232, 184, 75, 0.35);
+        }
+        .cal-day.cd-today::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+        .cal-day.cd-sel {
+            background: var(--primary);
+            color: var(--white);
+            font-weight: 800;
+            box-shadow: 0 3px 16px rgba(212, 56, 67, 0.4);
+            transform: scale(1.05);
+        }
+        .cal-day.cd-empty {
+            visibility: hidden;
+            cursor: default;
+        }
+        .cal-day.cd-booked {
+            color: #b0b8c4;
+            text-decoration: line-through;
+            cursor: not-allowed;
+            opacity: 0.45;
+            background: #f5f6f8;
+        }
+        .cal-day.cd-avail {
+            /* available free date - default state */
+        }
+        .cal-day.cd-past {
+            color: #ccc;
+            cursor: not-allowed;
+            opacity: 0.35;
+        }
+
+        /* Legend */
+        .cal-legend {
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+        .cal-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--gray-dark);
+        }
+        .cal-legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .cl-dot-today { background: var(--accent); }
+        .cl-dot-sel { background: var(--primary); }
+        .cl-dot-free { background: #c6f6d5; border: 1.5px solid #a7f3d0; }
+        .cl-dot-booked { background: #f0f1f3; border: 1.5px dashed #c0c8d4; }
+
+        /* Time Slots */
+        .times-section {
+            margin-top: 22px;
+            display: none;
+        }
+        .times-section.visible {
+            display: block;
+            animation: fadeSlideUp 0.35s ease;
+        }
+        .times-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--surface);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .times-label span { color: var(--primary); }
+        .times-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+            gap: 8px;
+        }
+        .time-slot {
+            padding: 10px 6px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            background: #f9f6f1;
+            color: var(--gray-dark);
+        }
+        .time-slot:hover:not(.ts-busy) {
+            border-color: var(--primary);
+            background: rgba(212, 56, 67, 0.06);
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 56, 67, 0.12);
+        }
+        .time-slot.ts-busy {
+            background: #f0f1f3;
+            color: #b0b8c4;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            opacity: 0.65;
+        }
+        .time-slot.ts-sel {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+            box-shadow: 0 4px 16px rgba(212, 56, 67, 0.3);
+        }
+
+        /* Form Card */
+        .form-card {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            padding: 28px;
+            border: 2px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+        }
+        .form-card h3 {
+            font-size: 1.15rem;
+            color: var(--surface);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-card h3 i { color: var(--primary); }
+
+        .res-form { display: flex; flex-direction: column; gap: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media(max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+
+        .fg { display: flex; flex-direction: column; gap: 5px; }
+        .fg label { font-weight: 700; color: var(--surface); font-size: 0.88rem; }
+        .fg input, .fg textarea, .fg select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.92rem;
+            transition: all 0.25s;
+            font-family: inherit;
+            background: #faf8f5;
+        }
+        .fg input:focus, .fg textarea:focus, .fg select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(212, 56, 67, 0.1);
+            background: var(--white);
+        }
+        .fg textarea { resize: vertical; min-height: 80px; }
+
+        .selected-info {
+            background: rgba(232, 184, 75, 0.08);
+            border: 1.5px solid rgba(232, 184, 75, 0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 0.88rem;
+            color: var(--surface);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            line-height: 1.5;
+        }
+        .selected-info.visible { display: flex; }
+        .selected-info i { color: var(--accent); font-size: 1.1rem; }
+
+        .res-btn {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 16px 28px;
+            border-radius: 14px;
+            font-size: 1.02rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 6px;
+            letter-spacing: 0.3px;
+        }
+        .res-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 56, 67, 0.35);
+        }
+        .res-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .res-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .res-note i { color: var(--primary); }
+
+        /* Summary Card (bottom) */
+        .res-summary {
+            max-width: 1140px;
+            margin: 32px auto 0;
+            padding: 0 24px;
+        }
+        .res-summary-inner {
+            background: linear-gradient(135deg, var(--surface), #2a1e1b);
+            border-radius: 20px;
+            padding: 32px 40px;
+            color: var(--white);
+            display: none;
+            animation: fadeSlideUp 0.4s ease;
+        }
+        .res-summary-inner.visible { display: block; }
+        .res-summary-inner h3 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .res-summary-inner h3 i { color: var(--accent); }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .summary-item .s-label { font-size: 0.72rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+        .summary-item .s-value { font-size: 1.15rem; font-weight: 800; color: var(--accent); }
+
+        .close-summary-btn {
+            background: var(--accent);
+            color: var(--surface);
+            border: none;
+            padding: 12px 32px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .close-summary-btn:hover { background: var(--accent-dark); transform: translateY(-2px); }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-wrap">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <a href="index.html" class="logo">PADEL <span>PLATZ</span></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Početna</a></li>
+            <li><a href="o-nama.html">O Nama</a></li>
+            <li><a href="galerija.html">Galerija</a></li>
+            <li><a href="cenovnik.html">Cenovnik</a></li>
+            <li><a href="pravila.html">Pravila</a></li>
+            <li><a href="rezervacija.html">Rezervacija</a></li>
+            <li><a href="kontakt.html">Kontakt</a></li>
+        </ul>
+        <div class="nav-right">
+            <a href="rezervacija.html" class="btn-nav"><i class="fas fa-calendar-check"></i> Rezerviši Termin</a>
+            <button class="hamburger" id="hamburger-btn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+</nav>
+
+<section class="reservation-page section">
+    <div class="container">
+        <h2 class="st">Rezerviši Termin</h2>
+        <p class="ss">Izaberite datum u kalendaru — slobodni termini su označeni zelenom bojom</p>
+
+        <div class="res-layout">
+            <!-- LEFT: Calendar -->
+            <div class="cal-card">
+                <div class="cal-header">
+                    <div class="cal-nav-group">
+                        <button class="cal-nav-btn" id="cal-prev" title="Prethodni mesec" aria-label="Prethodni mesec">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="cal-month-label" id="cal-label"></span>
+                        <button class="cal-nav-btn" id="cal-next" title="Sledeći mesec" aria-label="Sledeći mesec">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cal-weekdays">
+                    <div class="cal-wd">Po</div>
+                    <div class="cal-wd">Ut</div>
+                    <div class="cal-wd">Sr</div>
+                    <div class="cal-wd">Če</div>
+                    <div class="cal-wd">Pe</div>
+                    <div class="cal-wd" style="color:var(--primary);">Su</div>
+                    <div class="cal-wd" style="color:var(--primary);">Ne</div>
+                </div>
+
+                <div class="cal-grid" id="cal-grid"></div>
+
+                <div class="cal-legend">
+                    <div class="cal-legend-item"><span class="cal-legend-dot cl-dot-today"></span> Danas</div>
+                    <div class="cal-legend-item"><span class="cal-legend-dot cl-dot-free"></span> Slobodan</div>
+                    <div class="cal-legend-item"><span class="cal-legend-dot cl-dot-sel"></span> Izabran</div>
+                    <div class="cal-legend-item"><span class="cal-legend-dot cl-dot-booked"></span> Zauzet</div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Form -->
+            <div class="form-card">
+                <h3><i class="fas fa-calendar-check"></i> Detalji rezervacije</h3>
+
+                <div class="selected-info" id="selected-info">
+                    <i class="fas fa-circle-check"></i>
+                    <span id="selected-info-text">Niste izabrali datum</span>
+                </div>
+
+                <form id="reserve-form" class="res-form">
+                    <div class="form-row">
+                        <div class="fg">
+                            <label for="fullname">Ime i prezime *</label>
+                            <input type="text" id="fullname" required placeholder="Marko Marković">
+                        </div>
+                        <div class="fg">
+                            <label for="phone">Broj telefona *</label>
+                            <input type="tel" id="phone" required placeholder="+381 66 123 4567">
+                        </div>
+                    </div>
+                    <div class="fg">
+                        <label for="email">Email adresa</label>
+                        <input type="email" id="email" placeholder="vasa@email.com">
+                    </div>
+                    <div class="form-row">
+                        <div class="fg">
+                            <label>Datum *</label>
+                            <input type="date" id="date-input" required style="pointer-events:none;opacity:0;position:absolute;">
+                            <input type="text" id="date-display" readonly placeholder="Kliknite na kalendar" style="cursor:pointer;" title="Izaberite datum klikom na kalendar">
+                        </div>
+                        <div class="fg">
+                            <label for="time-select">Vreme *</label>
+                            <select id="time-select" required disabled>
+                                <option value="">-- Prvo izaberite datum --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fg">
+                        <label for="players">Broj igrača</label>
+                        <select id="players">
+                            <option value="2">2 igrača (1 par)</option>
+                            <option value="4" selected>4 igrača (2 para)</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label for="message">Napomena (opciono)</label>
+                        <textarea id="message" rows="3" placeholder="Npr: Želim teren broj 2..."></textarea>
+                    </div>
+                    <button type="submit" class="res-btn" id="submit-btn" disabled>
+                        <i class="fas fa-paper-plane"></i> POŠALJI REZERVACIJU
+                    </button>
+                    <p class="res-note"><i class="fas fa-info-circle"></i> Potvrda dolazi na mejl ili Viber u najkraćem roku.</p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Summary after submit -->
+        <div class="res-summary">
+            <div class="res-summary-inner" id="res-summary">
+                <h3><i class="fas fa-check-circle"></i> Rezervacija uspešno poslata!</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="s-label">Datum</div>
+                        <div class="s-value" id="sum-date"></div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="s-label">Vreme</div>
+                        <div class="s-value" id="sum-time"></div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="s-label">Igrači</div>
+                        <div class="s-value" id="sum-players"></div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="s-label">Ime</div>
+                        <div class="s-value" id="sum-name"></div>
+                    </div>
+                </div>
+                <button class="close-summary-btn" id="close-summary"><i class="fas fa-arrow-rotate-left"></i> Nazad na kalendar</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <h2>Niste sigurni za datum?</h2>
+        <p>Javite nam se pa ćemo predložiti najbolji dostupan termin po vašem rasporedu.</p>
+        <a href="kontakt.html" class="btn-h"><i class="fas fa-comments"></i> Javite nam se</a>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="fb">
+                <a href="index.html" class="logo">PADEL <span>PLATZ</span></a>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/people/Padel-Platz/61575166736911" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.instagram.com/padelplatz/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.tiktok.com/@padel.platz" target="_blank" rel="noopener" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4>Brzi Linkovi</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">Početna</a></li>
+                    <li><a href="cenovnik.html">Cenovnik</a></li>
+                    <li><a href="rezervacija.html">Rezervacija</a></li>
+                    <li><a href="kontakt.html">Kontakt</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Kontakt</h4>
+                <ul class="footer-links">
+                    <li><a href="tel:+381668123647">📞 +381 66 8123 647</a></li>
+                    <li><a href="mailto:info@padelplatz.rs">✉ info@padelplatz.rs</a></li>
+                    <li><a href="https://www.google.com/maps/@43.7214157,20.6823418,591m/data=!3m1!1e3" target="_blank" rel="noopener">📍 Milomira Glavčića 18</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Radno Vreme</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Pon - Pet: 08:00 - 24:00</a></li>
+                    <li><a href="#">Subota: 09:00 - 22:00</a></li>
+                    <li><a href="#">Nedelja: 10:00 - 20:00</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; <span id="cy">2026</span> Padel Platz Kraljevo. Sva prava zadržana.</p>
+        </div>
+    </div>
+</footer>
+
+<div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" aria-label="Zatvori">&times;</button>
+    <a href="index.html">🏠 Početna</a>
+    <a href="o-nama.html">ℹ️ O Nama</a>
+    <a href="galerija.html">📸 Galerija</a>
+    <a href="cenovnik.html">💰 Cenovnik</a>
+    <a href="pravila.html">📋 Pravila</a>
+    <a href="rezervacija.html">📅 Rezervacija</a>
+    <a href="kontakt.html">📞 Kontakt</a>
+    <a href="rezervacija.html" class="mm-btn">✅ Rezerviši Termin</a>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
